@@ -29,12 +29,12 @@ git clone https://github.com/datawire/jwt-poc.git
    kubectl apply -f httpbin.yaml
    ```
 
-2. Get the IP address of Ambassador: `kubectl get svc ambassador`.
+2. Get the IP address of Ambassador: `AMBASSADOR_IP=$(kubectl get svc ambassador -o jsonpath='{.status.loadBalancer.ingress[0].ip}')`.
 
 3. Send a request to `httpbin`:
 
    ```
-   curl -v http://{AMBASSADOR_IP}/httpbin/ip
+   curl -v http://$AMBASSADOR_IP/httpbin/ip
    {
       "origin": "108.20.119.124, 35.184.242.212, 108.20.119.124"
    }
@@ -90,7 +90,7 @@ Next, we'll set up metrics using Prometheus and Grafana.
 3. Send an invalid JWT, and get a 401:
 
    ```
-   curl -i 35.194.55.166/jwt-httpbin/ip
+   curl -i $AMBASSADOR_IP/jwt-httpbin/ip
    HTTP/1.1 401 Unauthorized
    content-length: 58
    content-type: text/plain
@@ -101,7 +101,7 @@ Next, we'll set up metrics using Prometheus and Grafana.
 4. Note that we've configured the `jwt-httpbin` URL to require JWTs, but the `httpbin` URL does not:
 
    ```
-   curl -v http://{AMBASSADOR_IP}/httpbin/ip
+   curl -v http://$AMBASSADOR_IP/httpbin/ip
    {
       "origin": "108.20.119.124, 35.184.242.212, 108.20.119.124"
    }
