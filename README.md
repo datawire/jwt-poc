@@ -18,6 +18,9 @@ git clone https://github.com/datawire/jwt-poc.git
 
 4. Add your license key to the `ambassador-pro.yaml` file.
 
+#### Important
+This guide does not configure namespace. Make sure to apply all the files to same namespace and to edit the `clusterrolebinding` in `ambassador-pro.yaml` if you are not applying to the default namespace.
+
 ## Install Ambassador
 
 1. Install Ambassador with the following commands, along with the demo QOTM service and a route to HTTPbin service.
