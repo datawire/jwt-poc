@@ -54,7 +54,7 @@ This guide does not configure namespace. Make sure to apply all the files to sam
 
 First we will configure a rate limiting service for the pythonnode app. 
 
-1. Observe the `Mapping`s in api-challenge/pythonnode.yaml. 
+1. Observe the `Mapping`s in pythonnode.yaml. 
 
    You will see a `labels` applied to the latency `Mapping`. This configures Ambassador to label the request with the string `pythonnode`. We will configure Ambassador to `RateLimit` off this label.
 
@@ -159,11 +159,12 @@ Next, we'll set up metrics using Prometheus and Grafana.
 
 8. Import a dashboard. Click on the + button, and then choose Import. Upload the `ambassador-dashboard.json` file to Grafana. Choose the data source you created in the previous step, and click import.
 
-9. Go to the Ambassador dashboard!
+9. Go to the Ambassador dashboard! You should be able to see the 429s from the rate limit service earlier (yellow) spike as the rate limiting service kicks in.
 
-**Note:** You can easily see all of the metrics that Ambassador exposes by looking at the Prometheus dashboard.
+**Note:** You can see all of the metrics that Ambassador exposes by looking at Prometheus. To access Prometheus:
 
 ```
 kubectl port-forward prometheus-prometheus-0 9090
 ```
-http://localhost:9090
+
+Then, go to http://localhost:9090 in your browser.
