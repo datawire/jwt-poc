@@ -51,7 +51,7 @@ git clone https://github.com/datawire/jwt-poc.git
 
 First we will configure a rate limiting service for the pythonnode app. 
 
-1. Observe the `Mapping`s in api-challenge/pythonnode.yaml. 
+1. Observe the `Mapping`s in pythonnode.yaml. 
 
    You will see a `labels` applied to the latency `Mapping`. This configures Ambassador to label the request with the string `pythonnode`. We will configure Ambassador to `RateLimit` off this label.
 
