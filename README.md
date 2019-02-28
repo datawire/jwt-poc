@@ -50,6 +50,15 @@ This guide does not configure namespace. Make sure to apply all the files to sam
    }
    ```
 
+## With Istio
+
+If you have Istio installed and would like to run this demo with the pythonnode app in the Istio service mesh:
+
+```
+kubectl apply -f ambassador-pro-istio.yaml
+kubectl apply -f <(istioctl kube-inject -f pythonnode-istio.yaml)
+```
+
 ## Rate Limiting
 
 First we will configure a rate limiting service for the pythonnode app. 
