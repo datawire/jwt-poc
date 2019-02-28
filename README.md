@@ -24,13 +24,19 @@ git clone https://github.com/datawire/jwt-poc.git
    
    ```
    kubectl apply -f statsd-sink.yaml
-   kubectl apply -f ambassador-pro.yaml
    kubectl apply -f ambassador-pro-auth.yaml
+   kubectl apply -f ambassador-pro-ratelimit.yaml
+   kubectl apply -f ambassador-pro.yaml
    kubectl apply -f ambassador-service.yaml
    kubectl apply -f httpbin.yaml
+   kubectl apply -f pythonnode.yaml
    ```
 
-2. Get the IP address of Ambassador: `AMBASSADOR_IP=$(kubectl get svc ambassador -o jsonpath='{.status.loadBalancer.ingress[0].ip}')`.
+2. Get the IP address of Ambassador: 
+
+   ```
+   AMBASSADOR_IP=$(kubectl get svc ambassador -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+   ```
 
 3. Send a request to `httpbin`:
 
@@ -41,38 +47,29 @@ git clone https://github.com/datawire/jwt-poc.git
    }
    ```
 
-## Metrics
+## Rate Limiting
 
-Next, we'll set up metrics using Prometheus and Grafana.
+First we will configure a rate limiting service for the pythonnode app. 
 
-1. Install the Prometheus Operator.
+1. Observe the `Mapping`s in api-challenge/pythonnode.yaml. You will see a `label` applied to the latency `Mapping`. This `label` configures Ambassador to annotate the request with the string `pythonnode`. We will configure Ambassador to `RateLimit` off this label.
 
-   ```
-   kubectl apply -f monitoring/prometheus.yaml
-   ```
-
-2. Wait 30 seconds until the `prometheus-operator` pod is in the `Running` state.
-
-3. Create the rest of the monitoring setup:
+2. Configure the `RateLimit`:
 
    ```
-   kubectl apply -f monitoring/prom-cluster.yaml
-   kubectl apply -f monitoring/prom-svc.yaml
-   kubectl apply -f monitoring/servicemonitor.yaml
-   kubectl apply -f monitoring/grafana.yaml
+   kubectl apply -f ratelimit.yaml
+   ```
+   
+   We have now configured Ambassador to limit requests containing the label `pythonnode` to 5 requests per minute. We use requests per minute for simplicity while testing, other time frames (second, hour, day) are acceptable as well.
+
+3. Test the `RateLimit`:
+
+   ```
+   ./ratelimit-test.sh
    ```
 
-4. Send some traffic through Ambassador (metrics won't appear until some traffic is sent). You can just run the `curl` command to httpbin above a few times.
-
-5. Get the IP address of Grafana: `kubectl get svc grafana`
-
-6. In your browser, go to the `$GRAFANA_IP` and log in using username `admin`, password `admin`.
-
-7. Configure Prometheus as the Grafana data source. Give it a name, choose type Prometheus, and point the HTTP URL to `http://prometheus.default:9090`. Save & Test the Data Source.
-
-8. Import a dashboard. Click on the + button, and then choose Import. Upload the `ambassador-dashboard.json` file to Grafana. Choose the data source you created in the previous step, and click import.
-
-9. Go to the Ambassador dashboard!
+   This is a simple bash script that sends a `cURL` to http://$AMBASSADOR_IP/latency/ every second. You will notice that after the 5th request, Ambassador is returning a 429 instead of 200 to requests to the `/latency/` endpoint.
+   
+   Requests to `/healthcheck` are not rate limited. 
 
 ## JWT
 
@@ -109,3 +106,43 @@ Next, we'll set up metrics using Prometheus and Grafana.
    ```
 
 The JWT is validated using public keys supplied in a JWKS file. For the purposes of this demo, we're supplying a Datawire JWKS file. You can change the JWKS file by modifying the `filter.yaml` manifest and changing the `jwksURI` value.
+
+## Metrics
+
+Next, we'll set up metrics using Prometheus and Grafana.
+
+1. Install the Prometheus Operator.
+
+   ```
+   kubectl apply -f monitoring/prometheus.yaml
+   ```
+
+2. Wait 30 seconds until the `prometheus-operator` pod is in the `Running` state.
+
+3. Create the rest of the monitoring setup:
+
+   ```
+   kubectl apply -f monitoring/prom-cluster.yaml
+   kubectl apply -f monitoring/prom-svc.yaml
+   kubectl apply -f monitoring/servicemonitor.yaml
+   kubectl apply -f monitoring/grafana.yaml
+   ```
+
+4. Send some traffic through Ambassador (metrics won't appear until some traffic is sent). You can just run the `curl` command to httpbin above a few times.
+
+5. Get the IP address of Grafana: `kubectl get svc grafana`
+
+6. In your browser, go to the `$GRAFANA_IP` and log in using username `admin`, password `admin`.
+
+7. Configure Prometheus as the Grafana data source. Give it a name, choose type Prometheus, and point the HTTP URL to `http://prometheus.default:9090`. Save & Test the Data Source.
+
+8. Import a dashboard. Click on the + button, and then choose Import. Upload the `ambassador-dashboard.json` file to Grafana. Choose the data source you created in the previous step, and click import.
+
+9. Go to the Ambassador dashboard!
+
+**Note:** You can easily see all of the metrics that Ambassador exposes by looking at the Prometheus dashboard.
+
+```
+kubectl port-forward prometheus-prometheus-0 9090
+```
+http://localhost:9090
