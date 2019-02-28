@@ -25,6 +25,7 @@ git clone https://github.com/datawire/jwt-poc.git
    ```
    kubectl apply -f statsd-sink.yaml
    kubectl apply -f ambassador-pro.yaml
+   kubectl apply -f ambassador-pro-auth.yaml
    kubectl apply -f ambassador-service.yaml
    kubectl apply -f httpbin.yaml
    ```
