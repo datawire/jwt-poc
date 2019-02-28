@@ -51,7 +51,25 @@ git clone https://github.com/datawire/jwt-poc.git
 
 First we will configure a rate limiting service for the pythonnode app. 
 
-1. Observe the `Mapping`s in api-challenge/pythonnode.yaml. You will see a `label` applied to the latency `Mapping`. This `label` configures Ambassador to annotate the request with the string `pythonnode`. We will configure Ambassador to `RateLimit` off this label.
+1. Observe the `Mapping`s in api-challenge/pythonnode.yaml. 
+
+   You will see a `labels` applied to the latency `Mapping`. This configures Ambassador to label the request with the string `pythonnode`. We will configure Ambassador to `RateLimit` off this label.
+
+   ```
+      ---
+      apiVersion: ambassador/v1
+      kind: Mapping
+      name: latency_mapping
+      prefix: /latency/
+      rewrite: ""
+      method: GET
+      service: pythonnode.default.svc.cluster.local
+      labels:
+        ambassador:
+          - string_request_label:
+            - pythonnode
+   ```
+
 
 2. Configure the `RateLimit`:
 
@@ -59,7 +77,7 @@ First we will configure a rate limiting service for the pythonnode app.
    kubectl apply -f ratelimit.yaml
    ```
    
-   We have now configured Ambassador to limit requests containing the label `pythonnode` to 5 requests per minute. We use requests per minute for simplicity while testing, other time frames (second, hour, day) are acceptable as well.
+   We have now configured Ambassador to limit requests containing the label `pythonnode` to 5 requests per minute. We use requests per minute for simplicity while testing, other time units (second, hour, day) are acceptable as well.
 
 3. Test the `RateLimit`:
 
